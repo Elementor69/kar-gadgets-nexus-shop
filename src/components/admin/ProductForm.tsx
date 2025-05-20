@@ -1,5 +1,5 @@
 
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -27,8 +27,38 @@ const ProductForm = ({ onSubmit, onCancel, initialData }: ProductFormProps) => {
   const [category, setCategory] = useState(initialData?.category || "brand-new");
   const [stock, setStock] = useState(initialData?.stock?.toString() || "");
   const [description, setDescription] = useState(initialData?.description || "");
-  const [imageUrl, setImageUrl] = useState(initialData?.image || "");
+  const [imageFile, setImageFile] = useState<File | null>(null);
+  const [imagePreview, setImagePreview] = useState(initialData?.image || "");
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const { toast } = useToast();
+  
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files[0]) {
+      const file = e.target.files[0];
+      setImageFile(file);
+      
+      // Create preview URL
+      const reader = new FileReader();
+      reader.onload = (event) => {
+        if (event.target?.result) {
+          setImagePreview(event.target.result as string);
+        }
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+  
+  const handleBrowseClick = () => {
+    fileInputRef.current?.click();
+  };
+  
+  const handleRemoveImage = () => {
+    setImageFile(null);
+    setImagePreview("");
+    if (fileInputRef.current) {
+      fileInputRef.current.value = "";
+    }
+  };
   
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -50,7 +80,8 @@ const ProductForm = ({ onSubmit, onCancel, initialData }: ProductFormProps) => {
       category,
       stock: parseInt(stock),
       description,
-      image: imageUrl || "https://placehold.co/600x400?text=Product+Image",
+      image: imagePreview || "https://placehold.co/600x400?text=Product+Image",
+      imageFile: imageFile, // Pass the file object for upload processing
     };
     
     onSubmit(productData);
@@ -102,6 +133,7 @@ const ProductForm = ({ onSubmit, onCancel, initialData }: ProductFormProps) => {
         </div>
         
         <form onSubmit={handleSubmit} className="p-6 space-y-4">
+          {/* Product Name */}
           <motion.div variants={itemVariants} className="space-y-2">
             <Label htmlFor="name">Product Name</Label>
             <Input
@@ -112,6 +144,7 @@ const ProductForm = ({ onSubmit, onCancel, initialData }: ProductFormProps) => {
             />
           </motion.div>
           
+          {/* Price and Stock */}
           <div className="grid grid-cols-2 gap-4">
             <motion.div variants={itemVariants} className="space-y-2">
               <Label htmlFor="price">Price (₹)</Label>
@@ -136,6 +169,7 @@ const ProductForm = ({ onSubmit, onCancel, initialData }: ProductFormProps) => {
             </motion.div>
           </div>
           
+          {/* Category */}
           <motion.div variants={itemVariants} className="space-y-2">
             <Label htmlFor="category">Category</Label>
             <Select 
@@ -154,6 +188,7 @@ const ProductForm = ({ onSubmit, onCancel, initialData }: ProductFormProps) => {
             </Select>
           </motion.div>
           
+          {/* Description */}
           <motion.div variants={itemVariants} className="space-y-2">
             <Label htmlFor="description">Description</Label>
             <Textarea
@@ -165,46 +200,70 @@ const ProductForm = ({ onSubmit, onCancel, initialData }: ProductFormProps) => {
             />
           </motion.div>
           
+          {/* Image Upload */}
           <motion.div variants={itemVariants} className="space-y-2">
-            <Label htmlFor="imageUrl">Image URL</Label>
-            <div className="grid grid-cols-[1fr_auto] gap-2">
-              <Input
-                id="imageUrl"
-                value={imageUrl}
-                onChange={(e) => setImageUrl(e.target.value)}
-                placeholder="https://example.com/image.jpg"
+            <Label>Product Image</Label>
+            <div className="border-2 border-dashed border-border rounded-lg p-4 text-center">
+              <input
+                type="file"
+                ref={fileInputRef}
+                onChange={handleFileChange}
+                className="hidden"
+                accept="image/*"
               />
-              <Button
-                type="button"
-                variant="outline"
-                size="icon"
-                className="aspect-square"
-              >
-                <Upload className="h-4 w-4" />
-              </Button>
+              
+              {!imagePreview ? (
+                <div 
+                  onClick={handleBrowseClick}
+                  className="flex flex-col items-center justify-center py-4 cursor-pointer"
+                >
+                  <Upload className="h-8 w-8 mb-2 text-muted-foreground" />
+                  <p className="text-sm text-muted-foreground mb-2">
+                    Drag and drop your image here or click to browse
+                  </p>
+                  <Button 
+                    type="button" 
+                    variant="outline" 
+                    size="sm"
+                    onClick={handleBrowseClick}
+                  >
+                    Choose File
+                  </Button>
+                </div>
+              ) : (
+                <div className="relative">
+                  <img
+                    src={imagePreview}
+                    alt="Product preview"
+                    className="max-h-48 mx-auto object-contain"
+                  />
+                  <Button
+                    type="button"
+                    variant="destructive"
+                    size="icon"
+                    className="absolute top-0 right-0 h-6 w-6 rounded-full"
+                    onClick={handleRemoveImage}
+                  >
+                    <X className="h-3 w-3" />
+                  </Button>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    className="mt-3"
+                    onClick={handleBrowseClick}
+                  >
+                    Replace Image
+                  </Button>
+                </div>
+              )}
+              <p className="text-xs text-muted-foreground mt-2">
+                Supported formats: JPEG, PNG, GIF. Max size: 5MB
+              </p>
             </div>
           </motion.div>
           
-          {imageUrl && (
-            <motion.div
-              variants={itemVariants}
-              className="relative overflow-hidden rounded-md border h-48 flex items-center justify-center"
-            >
-              {imageUrl ? (
-                <img
-                  src={imageUrl}
-                  alt="Product preview"
-                  className="object-contain w-full h-full"
-                />
-              ) : (
-                <div className="text-muted-foreground flex flex-col items-center justify-center">
-                  <ImageIcon className="h-8 w-8 mb-2 opacity-50" />
-                  <span>No image preview</span>
-                </div>
-              )}
-            </motion.div>
-          )}
-          
+          {/* Submit Buttons */}
           <motion.div
             variants={itemVariants}
             className="flex items-center justify-end space-x-2 pt-4"
