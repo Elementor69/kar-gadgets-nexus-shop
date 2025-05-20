@@ -64,7 +64,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           name: "Admin User",
           email: email,
           avatar: "https://i.pravatar.cc/150?u=admin",
-          role: "admin"
+          role: "admin" as "admin" // Explicitly specify this is the "admin" literal type
         };
         setIsAdmin(true);
       } else {
@@ -73,7 +73,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           name: "John Doe",
           email: email,
           avatar: "https://i.pravatar.cc/150?u=john",
-          role: "user"
+          role: "user" as "user" // Explicitly specify this is the "user" literal type
         };
         setIsAdmin(false);
       }
@@ -98,7 +98,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         name: "Google User",
         email: "google.user@gmail.com",
         avatar: "https://i.pravatar.cc/150?u=google",
-        role: "user"
+        role: "user" as "user" // Explicitly specify this is the "user" literal type
       };
       
       localStorage.setItem("user", JSON.stringify(mockUser));
@@ -121,7 +121,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         name: name,
         email: email,
         avatar: `https://i.pravatar.cc/150?u=${email}`,
-        role: "user"
+        role: "user" as "user" // Explicitly specify this is the "user" literal type
       };
       
       localStorage.setItem("user", JSON.stringify(mockUser));
